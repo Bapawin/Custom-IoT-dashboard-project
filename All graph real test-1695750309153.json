@@ -1,0 +1,1113 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_SDM_4",
+      "label": "SDM_4",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "postgres",
+      "pluginName": "PostgreSQL"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.4.3"
+    },
+    {
+      "type": "panel",
+      "id": "nline-plotlyjs-panel",
+      "name": "Plotly",
+      "version": "1.3.0"
+    },
+    {
+      "type": "datasource",
+      "id": "postgres",
+      "name": "PostgreSQL",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "${DS_SDM_4}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "config": {
+          "displayModeBar": false
+        },
+        "data": "",
+        "layout": {
+          "font": {
+            "color": "darkgrey"
+          },
+          "margin": {
+            "b": 40,
+            "l": 20,
+            "r": 20,
+            "t": 5
+          },
+          "paper_bgcolor": "rgba(0,0,0,0)",
+          "plot_bgcolor": "rgba(0,0,0,0)",
+          "xaxis": {
+            "autorange": true,
+            "range": [
+              946684800000,
+              978307200000
+            ],
+            "type": "date"
+          },
+          "yaxis": {
+            "automargin": true,
+            "autorange": true,
+            "range": [
+              33.75610055180871,
+              37.59178418148376
+            ],
+            "type": "linear"
+          }
+        },
+        "onclick": "// console.log(data);\n// window.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "\n\nfunction getStandardDeviation (array) {\n  const n = array.length\n  const mean = array.reduce((a, b) => a + b) / n\n  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)\n}\nfunction transpose(a)\n{\n  return a[0].map(function (_, c) { return a.map(function (r) { return r[c]; }); });\n}\nconst average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;\n\nlet Data = data.series[0]\nlet PercentNG = data.series[1].fields[3].values.buffer\nlet Total = data.series[1].fields[2].values.buffer\nlet Ng= data.series[1].fields[0].values.buffer\nlet Ok= data.series[1].fields[1].values.buffer\nlet Xbar = average(data.series[2].fields[1].values.buffer ); // 5\nlet Sigma=(getStandardDeviation(data.series[2].fields[1].values.buffer))\nlet Serial =Data.fields[1].values.buffer\nlet Delivery =Data.fields[2].values.buffer\nlet Relief=Data.fields[3].values.buffer\nlet Jig=Data.fields[4].values.buffer\nlet Lot=Data.fields[5].values.buffer\nlet Cp= (data.series[2].fields[5].values.buffer[0]-data.series[2].fields[4].values.buffer[0])/6*Sigma\nlet customdata = transpose([Delivery,Relief,Serial,Jig,Lot])\nvar trace1 = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[1].values.buffer,\n  text:customdata,\n  name: Data.fields[1].name,\n  hovertemplate: '<b>Time</b>: %{x}<br>' +\n                    '<b>Value</b>: %{y:.2f}<br>' +\n                    '<b>Serial</b>:%{text[2]}</b><br>'+\n                    '<b>Jig</b>:%{text[3]}</b><br>'+\n                    '<b>Lot</b>:%{text[4]}</b><br>'+\n                    '<b>Trace</b>:%{text[1]}</b><br>'+\n                    '         :%{text[0]}</b><br>',\n  marker: {\n    color: '#055C9D',\n\t},\n  type: 'scatter',\n  mode: 'markers',\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar max = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[5].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar min = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[6].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar trace2 = {\n  y: data.series[2].fields[1].values.buffer,\n  marker: {\n    color: '#055C9D',\n\t},\n  name: 'Blue Trace',\n  hoverinfo:'skip',\n  xaxis: 'x2',\n  yaxis: 'y1',\n  type: 'histogram',\n};\n\nvar trace3 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: 0.05,\n    number: { font: { size: 20 }},\n    title: { text: \"Tolerance\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:0 }\n};\nvar trace4 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Total),\n    number: { font: { size: 20 }},\n    title: { text: \"Total\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:1 }\n};\nvar trace5 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Xbar,\n    number: { font: { size: 20 }},\n    title: { text: \"X-bar\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:1 }\n};\n\nvar trace6 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ok),\n    number: { font: { size: 20 }},\n    title: { text: \"OK\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:2 }\n};\n\nvar trace7 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: (Sigma*6).toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: '6σ', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:2 },\n};\nvar trace8 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ng),\n    number: { font: { size: 20 }},\n    title: { text: 'NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:3 },\n};\nconsole.log(Cp)\nvar trace9 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Cp.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: 'Cp', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:3 },\n};\nvar trace10 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(PercentNG),\n    number: { font: { size: 20 }},\n    title: { text: '%NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:0 },\n};\n\nvar layout = {\n  // title:Data.fields[2].name,\n  showlegend: false,\n    font: {\n    // family: 'Courier New, monospace',\n    // size: 18,\n    color: '#FFFFFF'\n  },\n  grid: { rows: 12, columns: 5, pattern: \"independent\" },\n  margin: { t: 25, b: 0, l: 30, r: 25 },\n  xaxis: {domain: [0, 0.7],gridcolor: 'grey'},\n  yaxis: {domain: [0.4, 1],   gridcolor: 'grey',\n          title: {\n          text: \"Ø(mm)\",\n          standoff: 20},},\n  // yaxis2: {domain: [0.45, 1] ,   gridcolor: 'grey',},\n  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},\n//   shapes: [\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 62.0,\n//         x1: 1,\n//         y1: 62.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     },\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 70.0,\n//         x1: 1,\n//         y1: 70.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     }\n    \n\n//     ]\n  \n};\n  \nreturn {data:[trace2,max,min,trace1,trace3,trace4,trace5,trace6,trace7,trace8,trace9,trace10],layout:layout };",
+        "yaml_mode": true
+      },
+      "pluginVersion": "9.4.3",
+      "repeat": "Line1",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT   \r\n  TO_CHAR(op_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"op_timestamp\",\r\n  u_serial_no  AS \"Serial no\",\r\n  delivery_line AS \"Delivery line\",\r\n  relief_line AS \"Relief line\",\r\n  delivery_pallet_no AS \"jig\",\r\n  u_lot_no AS \"lot\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(op_timestamp)  AND op_line = '1'\r\nORDER BY 1\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select \r\n\tcount( case when  v_op_leak_judge != 1 then v_op_leak_judge else null end ) as \"NG Seat Leak\",\r\n\tcount( case when  v_op_leak_judge = 1 then v_op_leak_judge else null end ) as \"OK Seat Leak\",\r\n\tcount(  v_op_leak_judge ) as \"Total Seat Leak\",\r\n\tround((count(case when v_op_leak_judge != 1 then 'NG' else null end)*100+0.00)\r\n\t\t/count(case when v_op_leak_judge != 1 OR v_op_leak_judge = 1 then 'NG' else null end),3) AS \"%NG\"\r\n\t\t\t\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(op_timestamp) AND op_line = '1'\r\nORDER BY 1 ",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n\tTO_CHAR(op_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"op_timestamp\",\r\n\tv_op_leak_data AS \"OP\",\r\n\tpn AS pn,\r\n\tseat_leak AS seat_leak,\r\n\tair_leak AS air_leak,\r\n\top_max AS op_max,\r\n\top_min AS op_min\r\n\tFROM \"real\"\r\nLEFT JOIN  master\r\nON \"real\".assy_digit_no=master.id\r\n\tWHERE \r\n   $__timeFilter(op_timestamp) AND op_line = '1'\r\nORDER BY 1",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Opening pressure mc. Line 1",
+      "transformations": [],
+      "type": "nline-plotlyjs-panel"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "${DS_SDM_4}"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "config": {
+          "displayModeBar": false
+        },
+        "data": [
+          {
+            "hovertext": "Point from red trace",
+            "line": {
+              "color": "red"
+            },
+            "mode": "markers",
+            "type": "scatter"
+          },
+          {
+            "hovertext": "Point from blue trace",
+            "line": {
+              "color": "blue"
+            },
+            "mode": "lines",
+            "type": "scatter"
+          }
+        ],
+        "layout": {
+          "margin": {
+            "b": 40,
+            "l": 20,
+            "r": 20,
+            "t": 5
+          },
+          "paper_bgcolor": "rgba(0,0,0,0)",
+          "plot_bgcolor": "rgba(0,0,0,0)",
+          "yaxis": {
+            "automargin": true,
+            "autorange": true
+          }
+        },
+        "onclick": "// console.log(data);\n// window.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "function getStandardDeviation (array) {\n  const n = array.length\n  const mean = array.reduce((a, b) => a + b) / n\n  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)\n}\nfunction transpose(a)\n{\n  return a[0].map(function (_, c) { return a.map(function (r) { return r[c]; }); });\n}\nconst average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;\n\nlet Data = data.series[0]\n\nlet Total = data.series[1].fields[2].values.buffer\nlet PercentNG = data.series[1].fields[3].values.buffer\nlet Ng= data.series[1].fields[0].values.buffer\nlet Ok= data.series[1].fields[1].values.buffer\nlet Xbar = average(data.series[2].fields[1].values.buffer ); // 5\nlet Sigma=(getStandardDeviation(data.series[2].fields[1].values.buffer))\nlet Serial =Data.fields[1].values.buffer\nlet Delivery =Data.fields[2].values.buffer\nlet Relief=Data.fields[3].values.buffer\nlet Jig=Data.fields[4].values.buffer\nlet Lot=Data.fields[5].values.buffer\nlet Cp= (data.series[2].fields[5].values.buffer[0]-data.series[2].fields[4].values.buffer[0])/6*Sigma\nlet customdata = transpose([Delivery,Relief,Serial,Jig,Lot])\nvar trace1 = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[1].values.buffer,\n  text:customdata,\n  name: Data.fields[1].name,\n  hovertemplate: '<b>Time</b>: %{x}<br>' +\n                    '<b>Value</b>: %{y:.2f}<br>' +\n                    '<b>Serial</b>:%{text[2]}</b><br>'+\n                    '<b>Jig</b>:%{text[3]}</b><br>'+\n                    '<b>Lot</b>:%{text[4]}</b><br>'+\n                    '<b>Trace</b>:%{text[1]}</b><br>'+\n                    '         :%{text[0]}</b><br>',\n  marker: {\n    color: '#055C9D',\n\t},\n  type: 'scatter',\n  mode: 'markers',\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar max = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[5].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar min = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[6].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar trace2 = {\n  y: data.series[2].fields[1].values.buffer,\n  marker: {\n    color: '#055C9D',\n\t},\n  name: 'Blue Trace',\n  hoverinfo:'skip',\n  xaxis: 'x2',\n  yaxis: 'y1',\n  type: 'histogram',\n};\n\nvar trace3 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: 0.05,\n    number: { font: { size: 20 }},\n    title: { text: \"Tolerance\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:0 }\n};\nvar trace4 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Total),\n    number: { font: { size: 20 }},\n    title: { text: \"Total\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:1 }\n};\nvar trace5 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Xbar,\n    number: { font: { size: 20 }},\n    title: { text: \"X-bar\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:1 }\n};\n\nvar trace6 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ok),\n    number: { font: { size: 20 }},\n    title: { text: \"OK\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:2 }\n};\n\nvar trace7 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: (Sigma*6).toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: '6σ', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:2 },\n};\nvar trace8 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ng),\n    number: { font: { size: 20 }},\n    title: { text: 'NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:3 },\n};\nconsole.log(Cp)\nvar trace9 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Cp.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: 'Cp', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:3 },\n};\nvar trace10 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(PercentNG),\n    number: { font: { size: 20 }},\n    title: { text: '%NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:0 },\n};\n\nvar layout = {\n  // title:Data.fields[2].name,\n  showlegend: false,\n    font: {\n    // family: 'Courier New, monospace',\n    // size: 18,\n    color: '#FFFFFF'\n  },\n  grid: { rows: 12, columns: 5, pattern: \"independent\" },\n  margin: { t: 25, b: 0, l: 30, r: 25 },\n  xaxis: {domain: [0, 0.7],gridcolor: 'grey'},\n  yaxis: {domain: [0.4, 1],   gridcolor: 'grey',\n          title: {\n          text: \"Ø(mm)\",\n          standoff: 20},},\n  // yaxis2: {domain: [0.45, 1] ,   gridcolor: 'grey',},\n  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},\n//   shapes: [\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 62.0,\n//         x1: 1,\n//         y1: 62.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     },\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 70.0,\n//         x1: 1,\n//         y1: 70.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     }\n    \n\n//     ]\n  \n};\n  \nreturn {data:[trace2,max,min,trace1,trace3,trace4,trace5,trace6,trace7,trace8,trace9,trace10],layout:layout };",
+        "yaml_mode": true
+      },
+      "pluginVersion": "9.4.3",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT   \r\n  TO_CHAR(op_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"op_timestamp\",\r\n  u_serial_no  AS \"Serial no\",\r\n  delivery_line AS \"Delivery line\",\r\n  relief_line AS \"Relief line\",\r\n  delivery_pallet_no AS \"jig\",\r\n  u_lot_no AS \"lot\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(op_timestamp)  AND op_line = '2'\r\nORDER BY 1\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select \r\n\tcount( case when  v_op_leak_judge != 1 then v_op_leak_judge else null end ) as \"NG Seat Leak\",\r\n\tcount( case when  v_op_leak_judge = 1 then v_op_leak_judge else null end ) as \"OK Seat Leak\",\r\n\tcount(  v_op_leak_judge ) as \"Total Seat Leak\",\r\n\tround((count(case when v_op_leak_judge != 1 then 'NG' else null end)*100+0.00)\r\n\t\t/count(case when v_op_leak_judge != 1 OR v_op_leak_judge = 1 then 'NG' else null end),3) AS \"%NG\"\r\n\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(op_timestamp) AND op_line = '2'\r\nORDER BY 1 ",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n\tTO_CHAR(op_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"op_timestamp\",\r\n\tv_op_leak_data AS \"OP\",\r\n\tpn AS pn,\r\n\tseat_leak AS seat_leak,\r\n\tair_leak AS air_leak,\r\n\top_max AS op_max,\r\n\top_min AS op_min\r\n\tFROM \"real\"\r\nLEFT JOIN  master\r\nON \"real\".assy_digit_no=master.id\r\n\tWHERE \r\n   $__timeFilter(op_timestamp) AND op_line = '2'\r\nORDER BY 1",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Opening pressure mc. Line 2",
+      "transformations": [],
+      "type": "nline-plotlyjs-panel"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "${DS_SDM_4}"
+      },
+      "description": "",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 5,
+      "options": {
+        "config": {
+          "displayModeBar": false
+        },
+        "data": "",
+        "layout": "",
+        "onclick": "// console.log(data);\n// window.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "\n\nfunction getStandardDeviation (array) {\n  const n = array.length\n  const mean = array.reduce((a, b) => a + b) / n\n  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)\n}\nfunction transpose(a)\n{\n  return a[0].map(function (_, c) { return a.map(function (r) { return r[c]; }); });\n}\nconst average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;\n\nlet Data = data.series[0]\nconsole.log(data.series)\nlet Total = data.series[1].fields[2].values.buffer\nlet PercentNG = data.series[1].fields[3].values.buffer\nlet Ng= data.series[1].fields[0].values.buffer\nlet Ok= data.series[1].fields[1].values.buffer\nlet Xbar = average(data.series[2].fields[1].values.buffer ); // 5\nlet Sigma=(getStandardDeviation(data.series[2].fields[1].values.buffer))\nlet Serial =Data.fields[1].values.buffer\nlet Delivery =Data.fields[2].values.buffer\nlet Relief=Data.fields[3].values.buffer\nlet Jig=Data.fields[4].values.buffer\nlet Lot=Data.fields[5].values.buffer\nlet Cp= (data.series[2].fields[5].values.buffer[0]-data.series[2].fields[4].values.buffer[0])/6*Sigma\nlet customdata = transpose([Delivery,Relief,Serial,Jig,Lot])\nvar trace1 = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[1].values.buffer,\n  text:customdata,\n  name: Data.fields[1].name,\n  hovertemplate: '<b>Time</b>: %{x}<br>' +\n                    '<b>Value</b>: %{y:.2f}<br>' +\n                    '<b>Serial</b>:%{text[2]}</b><br>'+\n                    '<b>Jig</b>:%{text[3]}</b><br>'+\n                    '<b>Lot</b>:%{text[4]}</b><br>'+\n                    '<b>Trace</b>:%{text[1]}</b><br>'+\n                    '         :%{text[0]}</b><br>',\n  marker: {\n    color: '#055C9D',\n\t},\n  type: 'scatter',\n  mode: 'markers',\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar max = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[3].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar trace2 = {\n  y: data.series[2].fields[1].values.buffer,\n  marker: {\n    color: '#055C9D',\n\t},\n  name: 'Blue Trace',\n  hoverinfo:'skip',\n  xaxis: 'x2',\n  yaxis: 'y1',\n  type: 'histogram',\n};\n\nvar trace3 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: 0.05,\n    number: { font: { size: 20 }},\n    title: { text: \"Tolerance\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:0 }\n};\nvar trace4 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Total),\n    number: { font: { size: 20 }},\n    title: { text: \"Total\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:1 }\n};\nvar trace5 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Xbar.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: \"X-bar\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:1 }\n};\n\nvar trace6 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ok),\n    number: { font: { size: 20 }},\n    title: { text: \"OK\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:2 }\n};\n\nvar trace7 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: (Sigma*6).toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: '6σ', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:2 },\n};\nvar trace8 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ng),\n    number: { font: { size: 20 }},\n    title: { text: 'NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:3 },\n};\nconsole.log(Cp)\nvar trace9 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Cp.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: 'Cp', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:3 },\n};\nvar trace10 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(PercentNG),\n    number: { font: { size: 20 }},\n    title: { text: '%NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:0 },\n};\n\n\nvar layout = {\n  // title:Data.fields[2].name,\n  showlegend: false,\n    font: {\n    // family: 'Courier New, monospace',\n    // size: 18,\n    color: '#FFFFFF'\n  },\n  grid: { rows: 12, columns: 5, pattern: \"independent\" },\n  margin: { t: 25, b: 0, l: 30, r: 25 },\n  xaxis: {domain: [0, 0.7],gridcolor: 'grey'},\n  yaxis: {domain: [0.4, 1],   gridcolor: 'grey',\n          title: {\n          text: \"Ø(mm)\",\n          standoff: 20},},\n  // yaxis2: {domain: [0.45, 1] ,   gridcolor: 'grey',},\n  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},\n//   shapes: [\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 62.0,\n//         x1: 1,\n//         y1: 62.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     },\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 70.0,\n//         x1: 1,\n//         y1: 70.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     }\n    \n\n//     ]\n  \n};\n  \nreturn {data:[trace2,max,trace1,trace3,trace4,trace5,trace6,trace7,trace8,trace9,trace10],layout:layout };",
+        "yaml_mode": true
+      },
+      "pluginVersion": "9.3.2",
+      "repeat": "Line2",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT   \r\n  DISTINCT ON (seat_timestamp) seat_timestamp AS \"time\",\r\n  u_serial_no  AS \"Serial no\",\r\n  delivery_line AS \"Delivery line\",\r\n  relief_line AS \"Relief line\",\r\n  delivery_pallet_no AS \"jig\",\r\n  u_lot_no AS \"lot\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(seat_timestamp)  AND seat_line = '1'\r\nORDER BY 1\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select \r\n\tcount( case when  v_seat_leak_judge != 1 then v_seat_leak_judge else null end ) as \"NG Seat Leak\",\r\n\tcount( case when  v_seat_leak_judge = 1 then v_seat_leak_judge else null end ) as \"OK Seat Leak\",\r\n\tcount(  v_seat_leak_judge ) as \"Total Seat Leak\",\r\n\tround((count(case when v_seat_leak_judge != 1 then 'NG' else null end)*100+0.00)\r\n\t\t/count(case when v_seat_leak_judge != 1 OR v_seat_leak_judge = 1 then 'NG' else null end),3) AS \"%NG\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(seat_timestamp) AND seat_line = '1'\r\nORDER BY 1 ",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n\tDISTINCT ON (seat_timestamp) seat_timestamp AS \"time\",\r\n\tv_seat_leak_data AS \"seat_leak_value\",\r\n\tpn AS pn,\r\n\tseat_leak AS seat_leak,\r\n\tair_leak AS air_leak,\r\n\top_max AS op_max,\r\n\top_min AS op_min\r\n\tFROM \"real\"\r\nLEFT JOIN  master\r\nON \"real\".assy_digit_no=master.id\r\n\tWHERE \r\n   $__timeFilter(seat_timestamp) AND  seat_line = '1'\r\nORDER BY 1",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Seat oil leakage mc. line1",
+      "transformations": [],
+      "type": "nline-plotlyjs-panel"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "${DS_SDM_4}"
+      },
+      "description": "",
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 6,
+      "options": {
+        "config": {
+          "displayModeBar": false
+        },
+        "data": "",
+        "layout": "",
+        "onclick": "// console.log(data);\n// window.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "\n\nfunction getStandardDeviation (array) {\n  const n = array.length\n  const mean = array.reduce((a, b) => a + b) / n\n  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)\n}\nfunction transpose(a)\n{\n  return a[0].map(function (_, c) { return a.map(function (r) { return r[c]; }); });\n}\nconst average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;\n\nlet Data = data.series[0]\nconsole.log(data.series)\nlet PercentNG = data.series[1].fields[3].values.buffer\nlet Total = data.series[1].fields[2].values.buffer\nlet Ng= data.series[1].fields[0].values.buffer\nlet Ok= data.series[1].fields[1].values.buffer\nlet Xbar = average(data.series[2].fields[1].values.buffer ); // 5\nlet Sigma=(getStandardDeviation(data.series[2].fields[1].values.buffer))\nlet Serial =Data.fields[1].values.buffer\nlet Delivery =Data.fields[2].values.buffer\nlet Relief=Data.fields[3].values.buffer\nlet Jig=Data.fields[4].values.buffer\nlet Lot=Data.fields[5].values.buffer\nlet Cp= (data.series[2].fields[5].values.buffer[0]-data.series[2].fields[4].values.buffer[0])/6*Sigma\nlet customdata = transpose([Delivery,Relief,Serial,Jig,Lot])\nvar trace1 = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[1].values.buffer,\n  text:customdata,\n  name: Data.fields[1].name,\n  hovertemplate: '<b>Time</b>: %{x}<br>' +\n                    '<b>Value</b>: %{y:.2f}<br>' +\n                    '<b>Serial</b>:%{text[2]}</b><br>'+\n                    '<b>Jig</b>:%{text[3]}</b><br>'+\n                    '<b>Lot</b>:%{text[4]}</b><br>'+\n                    '<b>Trace</b>:%{text[1]}</b><br>'+\n                    '         :%{text[0]}</b><br>',\n  marker: {\n    color: '#055C9D',\n\t},\n  type: 'scatter',\n  mode: 'markers',\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar max = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[3].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar trace2 = {\n  y: data.series[2].fields[1].values.buffer,\n  marker: {\n    color: '#055C9D',\n\t},\n  name: 'Blue Trace',\n  hoverinfo:'skip',\n  xaxis: 'x2',\n  yaxis: 'y1',\n  type: 'histogram',\n};\n\nvar trace3 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: 0.05,\n    number: { font: { size: 20 }},\n    title: { text: \"Tolerance\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:0 }\n};\nvar trace4 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Total),\n    number: { font: { size: 20 }},\n    title: { text: \"Total\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:1 }\n};\nvar trace5 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Xbar.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: \"X-bar\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:1 }\n};\n\nvar trace6 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ok),\n    number: { font: { size: 20 }},\n    title: { text: \"OK\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:2 }\n};\n\nvar trace7 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: (Sigma*6).toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: '6σ', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:2 },\n};\nvar trace8 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ng),\n    number: { font: { size: 20 }},\n    title: { text: 'NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:3 },\n};\nconsole.log(Cp)\nvar trace9 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Cp.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: 'Cp', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:3 },\n};\nvar trace10 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(PercentNG),\n    number: { font: { size: 20 }},\n    title: { text: '%NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:0 },\n};\n\n\nvar layout = {\n  // title:Data.fields[2].name,\n  showlegend: false,\n    font: {\n    // family: 'Courier New, monospace',\n    // size: 18,\n    color: '#FFFFFF'\n  },\n  grid: { rows: 12, columns: 5, pattern: \"independent\" },\n  margin: { t: 25, b: 0, l: 30, r: 25 },\n  xaxis: {domain: [0, 0.7],gridcolor: 'grey'},\n  yaxis: {domain: [0.4, 1],   gridcolor: 'grey',\n          title: {\n          text: \"Ø(mm)\",\n          standoff: 20},},\n  // yaxis2: {domain: [0.45, 1] ,   gridcolor: 'grey',},\n  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},\n//   shapes: [\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 62.0,\n//         x1: 1,\n//         y1: 62.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     },\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 70.0,\n//         x1: 1,\n//         y1: 70.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     }\n    \n\n//     ]\n  \n};\n  \nreturn {data:[trace2,max,trace1,trace3,trace4,trace5,trace6,trace7,trace8,trace9,trace10],layout:layout };",
+        "yaml_mode": true
+      },
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT   \r\n  TO_CHAR(seat_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"seat_timestamp\",\r\n  u_serial_no  AS \"Serial no\",\r\n  delivery_line AS \"Delivery line\",\r\n  relief_line AS \"Relief line\",\r\n  delivery_pallet_no AS \"jig\",\r\n  u_lot_no AS \"lot\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(seat_timestamp)  AND seat_line = '2'\r\nORDER BY 1\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select \r\n\tcount( case when  v_seat_leak_judge != 1 then v_seat_leak_judge else null end ) as \"NG Seat Leak\",\r\n\tcount( case when  v_seat_leak_judge = 1 then v_seat_leak_judge else null end ) as \"OK Seat Leak\",\r\n\tcount(  v_seat_leak_judge ) as \"Total Seat Leak\",\r\n\tround((count(case when v_seat_leak_judge != 1 then 'NG' else null end)*100+0.00)\r\n\t\t/count(case when v_seat_leak_judge != 1 OR v_seat_leak_judge = 1 then 'NG' else null end),3) AS \"%NG\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(seat_timestamp) AND seat_line = '2'\r\nORDER BY 1 ",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n\tTO_CHAR(seat_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"seat_timestamp\",\r\n\tv_seat_leak_data AS \"seat_leak_value\",\r\n\tpn AS pn,\r\n\tseat_leak AS seat_leak,\r\n\tair_leak AS air_leak,\r\n\top_max AS op_max,\r\n\top_min AS op_min\r\n\tFROM \"real\"\r\nLEFT JOIN  master\r\nON \"real\".assy_digit_no=master.id\r\n\tWHERE \r\n   $__timeFilter(seat_timestamp) AND  seat_line = '2'\r\nORDER BY 1",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Seat oil leakage mc. line2",
+      "transformations": [],
+      "type": "nline-plotlyjs-panel"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "${DS_SDM_4}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 0,
+        "y": 19
+      },
+      "id": 8,
+      "options": {
+        "config": {
+          "displayModeBar": false
+        },
+        "data": "",
+        "layout": "",
+        "onclick": "// console.log(data);\n// window.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "\n\nfunction getStandardDeviation (array) {\n  const n = array.length\n  const mean = array.reduce((a, b) => a + b) / n\n  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)\n}\nfunction transpose(a)\n{\n  return a[0].map(function (_, c) { return a.map(function (r) { return r[c]; }); });\n}\nconst average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;\n\nlet Data = data.series[0]\n\nlet Total = data.series[1].fields[2].values.buffer\nlet PercentNG = data.series[1].fields[3].values.buffer\nlet Ng= data.series[1].fields[0].values.buffer\nlet Ok= data.series[1].fields[1].values.buffer\nlet Xbar = average(data.series[2].fields[1].values.buffer ); // 5\nlet Sigma=(getStandardDeviation(data.series[2].fields[1].values.buffer))\nlet Serial =Data.fields[1].values.buffer\nlet Delivery =Data.fields[2].values.buffer\nlet Relief=Data.fields[3].values.buffer\nlet Jig=Data.fields[4].values.buffer\nlet Lot=Data.fields[5].values.buffer\nlet Cp= (data.series[2].fields[5].values.buffer[0]-data.series[2].fields[4].values.buffer[0])/6*Sigma\nlet customdata = transpose([Delivery,Relief,Serial,Jig,Lot])\nvar trace1 = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[1].values.buffer,\n  text:customdata,\n  name: Data.fields[1].name,\n  hovertemplate: '<b>Time</b>: %{x}<br>' +\n                    '<b>Value</b>: %{y:.2f}<br>' +\n                    '<b>Serial</b>:%{text[2]}</b><br>'+\n                    '<b>Jig</b>:%{text[3]}</b><br>'+\n                    '<b>Lot</b>:%{text[4]}</b><br>'+\n                    '<b>Trace</b>:%{text[1]}</b><br>'+\n                    '         :%{text[0]}</b><br>',\n  marker: {\n    color: '#055C9D',\n\t},\n  type: 'scatter',\n  mode: 'markers',\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar max = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[4].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\n\nvar trace2 = {\n  y: data.series[2].fields[1].values.buffer,\n  marker: {\n    color: '#055C9D',\n\t},\n  name: 'Blue Trace',\n  hoverinfo:'skip',\n  xaxis: 'x2',\n  yaxis: 'y1',\n  type: 'histogram',\n};\n\nvar trace3 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: 0.05,\n    number: { font: { size: 20 }},\n    title: { text: \"Tolerance\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:0 }\n};\nvar trace4 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Total),\n    number: { font: { size: 20 }},\n    title: { text: \"Total\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:1 }\n};\nvar trace5 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Xbar.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: \"X-bar\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:1 }\n};\n\nvar trace6 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ok),\n    number: { font: { size: 20 }},\n    title: { text: \"OK\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:2 }\n};\n\nvar trace7 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: (Sigma*6).toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: '6σ', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:2 },\n};\nvar trace8 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ng),\n    number: { font: { size: 20 }},\n    title: { text: 'NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:3 },\n};\nconsole.log(Cp)\nvar trace9 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Cp.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: 'Cp', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:3 },\n};\nvar trace10 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(PercentNG),\n    number: { font: { size: 20 }},\n    title: { text: '%NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:0 },\n};\n\n\nvar layout = {\n  // title:Data.fields[2].name,\n  showlegend: false,\n    font: {\n    // family: 'Courier New, monospace',\n    // size: 18,\n    color: '#FFFFFF'\n  },\n  grid: { rows: 12, columns: 5, pattern: \"independent\" },\n  margin: { t: 25, b: 0, l: 30, r: 25 },\n  xaxis: {domain: [0, 0.7],gridcolor: 'grey'},\n  yaxis: {domain: [0.4, 1],   gridcolor: 'grey',\n          title: {\n          text: \"Ø(mm)\",\n          standoff: 20},},\n  // yaxis2: {domain: [0.45, 1] ,   gridcolor: 'grey',},\n  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},\n//   shapes: [\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 62.0,\n//         x1: 1,\n//         y1: 62.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     },\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 70.0,\n//         x1: 1,\n//         y1: 70.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     }\n    \n\n//     ]\n  \n};\n  \nreturn {data:[trace2,max,trace1,trace3,trace4,trace5,trace6,trace7,trace8,trace9,trace10],layout:layout };",
+        "yaml_mode": true
+      },
+      "repeat": "Line1",
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT   \r\n  DISTINCT ON (ibutsu_timestamp) ibutsu_timestamp AS \"time\",\r\n  u_serial_no  AS \"Serial no\",\r\n  delivery_line AS \"Delivery line\",\r\n  relief_line AS \"Relief line\",\r\n  delivery_pallet_no AS \"jig\",\r\n  u_lot_no AS \"lot\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '1'\r\nORDER BY 1\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select \r\n\tcount( case when  v_ibutsu_judge != 1 then v_ibutsu_judge else null end ) as \"NG Seat Leak\",\r\n\tcount( case when  v_ibutsu_judge = 1 then v_ibutsu_judge else null end ) as \"OK Seat Leak\",\r\n\tcount(  v_ibutsu_judge ) as \"Total Seat Leak\",\r\n\tround((count(case when v_ibutsu_judge != 1 then 'NG' else null end)*100+0.00)\r\n\t\t/count(case when v_ibutsu_judge != 1 OR v_ibutsu_judge = 1 then 'NG' else null end),3) AS \"%NG\"\r\n\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '1'\r\nORDER BY 1 ",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n\tDISTINCT ON (ibutsu_timestamp) ibutsu_timestamp AS \"time\",\r\n\tv_ibutsu_leak,\r\n\tpn AS pn,\r\n\tseat_leak AS seat_leak,\r\n\tair_leak AS air_leak,\r\n\top_max AS op_max,\r\n\top_min AS op_min\r\n\tFROM \"real\"\r\nLEFT JOIN  master\r\nON \"real\".assy_digit_no=master.id\r\n\tWHERE \r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '1'\r\nORDER BY 1",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Air leak mc. Line 1",
+      "transformations": [],
+      "type": "nline-plotlyjs-panel"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "${DS_SDM_4}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 8,
+        "y": 19
+      },
+      "id": 9,
+      "options": {
+        "config": {
+          "displayModeBar": false
+        },
+        "data": "",
+        "layout": "",
+        "onclick": "// console.log(data);\n// window.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "\n\nfunction getStandardDeviation (array) {\n  const n = array.length\n  const mean = array.reduce((a, b) => a + b) / n\n  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)\n}\nfunction transpose(a)\n{\n  return a[0].map(function (_, c) { return a.map(function (r) { return r[c]; }); });\n}\nconst average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;\n\nlet Data = data.series[0]\nlet PercentNG = data.series[1].fields[3].values.buffer\nlet Total = data.series[1].fields[2].values.buffer\nlet Ng= data.series[1].fields[0].values.buffer\nlet Ok= data.series[1].fields[1].values.buffer\nlet Xbar = average(data.series[2].fields[1].values.buffer ); // 5\nlet Sigma=(getStandardDeviation(data.series[2].fields[1].values.buffer))\nlet Serial =Data.fields[1].values.buffer\nlet Delivery =Data.fields[2].values.buffer\nlet Relief=Data.fields[3].values.buffer\nlet Jig=Data.fields[4].values.buffer\nlet Lot=Data.fields[5].values.buffer\nlet daa =data.series[2].fields[1].values.buffer\nconsole.log(daa.filter(daa => daa >= 1.5))\nlet Cp= (data.series[2].fields[5].values.buffer[0]-data.series[2].fields[4].values.buffer[0])/6*Sigma\nlet customdata = transpose([Delivery,Relief,Serial,Jig,Lot])\nvar trace1 = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[1].values.buffer,\n  text:customdata,\n  name: Data.fields[1].name,\n  hovertemplate: '<b>Time</b>: %{x}<br>' +\n                    '<b>Value</b>: %{y:.2f}<br>' +\n                    '<b>Serial</b>:%{text[2]}</b><br>'+\n                    '<b>Jig</b>:%{text[3]}</b><br>'+\n                    '<b>Lot</b>:%{text[4]}</b><br>'+\n                    '<b>Trace</b>:%{text[1]}</b><br>'+\n                    '         :%{text[0]}</b><br>',\n  marker: {\n    color: '#055C9D',\n\t},\n  type: 'scatter',\n  mode: 'markers',\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar max = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[4].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\n\nvar trace2 = {\n  y: data.series[2].fields[1].values.buffer,\n  marker: {\n    color: '#055C9D',\n\t},\n  name: 'Blue Trace',\n  hoverinfo:'skip',\n  xaxis: 'x2',\n  yaxis: 'y1',\n  type: 'histogram',\n};\n\nvar trace3 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: 0.05,\n    number: { font: { size: 20 }},\n    title: { text: \"Tolerance\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:0 }\n};\nvar trace4 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Total),\n    number: { font: { size: 20 }},\n    title: { text: \"Total\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:1 }\n};\nvar trace5 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Xbar.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: \"X-bar\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:1 }\n};\n\nvar trace6 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ok),\n    number: { font: { size: 20 }},\n    title: { text: \"OK\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:2 }\n};\n\nvar trace7 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: (Sigma*6).toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: '6σ', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:2 },\n};\nvar trace8 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ng),\n    number: { font: { size: 20 }},\n    title: { text: 'NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:3 },\n};\nconsole.log(Cp)\nvar trace9 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Cp.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: 'Cp', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:3 },\n};\nvar trace10 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(PercentNG),\n    number: { font: { size: 20 }},\n    title: { text: '%NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:0 },\n};\n\nvar layout = {\n  // title:Data.fields[2].name,\n  showlegend: false,\n    font: {\n    // family: 'Courier New, monospace',\n    // size: 18,\n    color: '#FFFFFF'\n  },\n  grid: { rows: 12, columns: 5, pattern: \"independent\" },\n  margin: { t: 25, b: 0, l: 30, r: 25 },\n  xaxis: {domain: [0, 0.7],gridcolor: 'grey'},\n  yaxis: {domain: [0.4, 1],   gridcolor: 'grey',\n          title: {\n          text: \"Ø(mm)\",\n          standoff: 20},},\n  // yaxis2: {domain: [0.45, 1] ,   gridcolor: 'grey',},\n  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},\n//   shapes: [\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 62.0,\n//         x1: 1,\n//         y1: 62.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     },\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 70.0,\n//         x1: 1,\n//         y1: 70.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     }\n    \n\n//     ]\n  \n};\n  \nreturn {data:[trace2,max,trace1,trace3,trace4,trace5,trace6,trace7,trace8,trace9,trace10],layout:layout };",
+        "yaml_mode": true
+      },
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT   \r\n  DISTINCT ON (ibutsu_timestamp) ibutsu_timestamp AS \"time\",\r\n  u_serial_no  AS \"Serial no\",\r\n  delivery_line AS \"Delivery line\",\r\n  relief_line AS \"Relief line\",\r\n  delivery_pallet_no AS \"jig\",\r\n  u_lot_no AS \"lot\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '2'\r\nORDER BY 1\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select \r\n\tcount( case when  v_ibutsu_judge != 1 then v_ibutsu_judge else null end ) as \"NG Seat Leak\",\r\n\tcount( case when  v_ibutsu_judge = 1 then v_ibutsu_judge else null end ) as \"OK Seat Leak\",\r\n\tcount(  v_ibutsu_judge ) as \"Total Seat Leak\",\r\n\tround((count(case when v_ibutsu_judge != 1 then 'NG' else null end)*100+0.00)\r\n\t\t/count(case when v_ibutsu_judge != 1 OR v_ibutsu_judge = 1 then 'NG' else null end),3) AS \"%NG\"\r\n\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '2'\r\nORDER BY 1 ",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n\tDISTINCT ON (ibutsu_timestamp) ibutsu_timestamp AS \"time\",\r\n\tv_ibutsu_leak,\r\n\tpn AS pn,\r\n\tseat_leak AS seat_leak,\r\n\tair_leak AS air_leak,\r\n\top_max AS op_max,\r\n\top_min AS op_min\r\n\tFROM \"real\"\r\nLEFT JOIN  master\r\nON \"real\".assy_digit_no=master.id\r\n\tWHERE \r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '2'\r\nORDER BY 1",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Air leak mc. Line 2",
+      "transformations": [],
+      "type": "nline-plotlyjs-panel"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "${DS_SDM_4}"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 19
+      },
+      "id": 10,
+      "options": {
+        "config": {
+          "displayModeBar": false
+        },
+        "data": "",
+        "layout": {
+          "margin": {
+            "b": 40,
+            "l": 20,
+            "r": 20,
+            "t": 5
+          },
+          "paper_bgcolor": "rgba(0,0,0,0)",
+          "plot_bgcolor": "rgba(0,0,0,0)",
+          "yaxis": {
+            "automargin": true,
+            "autorange": true
+          }
+        },
+        "onclick": "// console.log(data);\n// window.updateVariables({query:{'var-project':'test'}, partial: true})",
+        "script": "\n\nfunction getStandardDeviation (array) {\n  const n = array.length\n  const mean = array.reduce((a, b) => a + b) / n\n  return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)\n}\nfunction transpose(a)\n{\n  return a[0].map(function (_, c) { return a.map(function (r) { return r[c]; }); });\n}\nconst average = arr => arr.reduce( ( p, c ) => p + c, 0 ) / arr.length;\n\nlet Data = data.series[0]\nlet PercentNG = data.series[1].fields[3].values.buffer\nlet Total = data.series[1].fields[2].values.buffer\nlet Ng= data.series[1].fields[0].values.buffer\nlet Ok= data.series[1].fields[1].values.buffer\nlet Xbar = average(data.series[2].fields[1].values.buffer ); // 5\nlet Sigma=(getStandardDeviation(data.series[2].fields[1].values.buffer))\nlet Serial =Data.fields[1].values.buffer\nlet Delivery =Data.fields[2].values.buffer\nlet Relief=Data.fields[3].values.buffer\nlet Jig=Data.fields[4].values.buffer\nlet Lot=Data.fields[5].values.buffer\nlet Cp= (data.series[2].fields[5].values.buffer[0]-data.series[2].fields[4].values.buffer[0])/6*Sigma\nlet customdata = transpose([Delivery,Relief,Serial,Jig,Lot])\nvar trace1 = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[1].values.buffer,\n  text:customdata,\n  name: Data.fields[1].name,\n  hovertemplate: '<b>Time</b>: %{x}<br>' +\n                    '<b>Value</b>: %{y:.2f}<br>' +\n                    '<b>Serial</b>:%{text[2]}</b><br>'+\n                    '<b>Jig</b>:%{text[3]}</b><br>'+\n                    '<b>Lot</b>:%{text[4]}</b><br>'+\n                    '<b>Trace</b>:%{text[1]}</b><br>'+\n                    '         :%{text[0]}</b><br>',\n  marker: {\n    color: '#055C9D',\n\t},\n  type: 'scatter',\n  mode: 'markers',\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\nvar max = {\n  x: data.series[2].fields[0].values.buffer,\n  y: data.series[2].fields[4].values.buffer,\n  mode: 'lines',\n  name: 'Red',\n  line: {\n    color: 'rgb(219, 64, 82)',\n    width: 3\n  },\n  xaxis: 'x1',\n  yaxis: 'y1',\n  domain: { row: 0, column: 0 }\n};\n\n\nvar trace2 = {\n  y: data.series[2].fields[1].values.buffer,\n  marker: {\n    color: '#055C9D',\n\t},\n  name: 'Blue Trace',\n  hoverinfo:'skip',\n  xaxis: 'x2',\n  yaxis: 'y1',\n  type: 'histogram',\n};\n\nvar trace3 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: 0.05,\n    number: { font: { size: 20 }},\n    title: { text: \"Tolerance\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:0 }\n};\nvar trace4 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Total),\n    number: { font: { size: 20 }},\n    title: { text: \"Total\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:1 }\n};\nvar trace5 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Xbar.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: \"X-bar\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 11, column:1 }\n};\n\nvar trace6 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ok),\n    number: { font: { size: 20 }},\n    title: { text: \"OK\", font: { size: 12 }, yanchor: 'bottom' },\n \n    domain: { row: 9, column:2 }\n};\n\nvar trace7 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: (Sigma*6).toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: '6σ', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:2 },\n};\nvar trace8 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(Ng),\n    number: { font: { size: 20 }},\n    title: { text: 'NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:3 },\n};\nconsole.log(Cp)\nvar trace9 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: Cp.toFixed(2),\n    number: { font: { size: 20 }},\n    title: { text: 'Cp', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 11, column:3 },\n};\nvar trace10 = {\n    type: \"indicator\",\n    mode: \"number\",\n    value: String(PercentNG),\n    number: { font: { size: 20 }},\n    title: { text: '%NG', font: { size: 12 }, yanchor: 'bottom' },\n    domain: { row: 9, column:0 },\n};\n\n\n\nvar layout = {\n  // title:Data.fields[2].name,\n  showlegend: false,\n    font: {\n    // family: 'Courier New, monospace',\n    // size: 18,\n    color: '#FFFFFF'\n  },\n  grid: { rows: 12, columns: 5, pattern: \"independent\" },\n  margin: { t: 25, b: 0, l: 30, r: 25 },\n  xaxis: {domain: [0, 0.7],gridcolor: 'grey'},\n  yaxis: {domain: [0.45, 1],   gridcolor: 'grey',\n          title: {\n          text: \"Ø(mm)\",\n          standoff: 20},},\n  // yaxis2: {domain: [0.45, 1] ,   gridcolor: 'grey',},\n  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},\n//   shapes: [\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 62.0,\n//         x1: 1,\n//         y1: 62.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     },\n//     {\n//         type: 'line',\n//         xref: 'paper',\n//         x0: 0,\n//         y0: 70.0,\n//         x1: 1,\n//         y1: 70.0,\n//         line:{\n//             color: 'rgb(255, 0, 0)',\n//             width: 4,\n//             dash:'dot'\n//         }\n//     }\n    \n\n//     ]\n  \n};\n  \nreturn {data:[trace2,max,trace1,trace3,trace4,trace5,trace6,trace7,trace8,trace9,trace10],layout:layout };",
+        "yaml_mode": true
+      },
+      "repeatDirection": "v",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "group": [],
+          "hide": false,
+          "metricColumn": "none",
+          "rawQuery": true,
+          "rawSql": "SELECT   \r\n  TO_CHAR(ibutsu_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"ibutsu_timestamp\",\r\n  u_serial_no  AS \"Serial no\",\r\n  delivery_line AS \"Delivery line\",\r\n  relief_line AS \"Relief line\",\r\n  delivery_pallet_no AS \"jig\",\r\n  u_lot_no AS \"lot\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '3'\r\nORDER BY 1\r\n",
+          "refId": "A",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "column"
+              }
+            ]
+          ],
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          },
+          "timeColumn": "time",
+          "where": [
+            {
+              "name": "$__timeFilter",
+              "params": [],
+              "type": "macro"
+            }
+          ]
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "select \r\n\tcount( case when  v_ibutsu_judge != 1 then v_ibutsu_judge else null end ) as \"NG Seat Leak\",\r\n\tcount( case when  v_ibutsu_judge = 1 then v_ibutsu_judge else null end ) as \"OK Seat Leak\",\r\n\tcount(  v_ibutsu_judge ) as \"Total Seat Leak\",\r\n\tround((count(case when v_ibutsu_judge != 1 then 'NG' else null end)*100+0.00)\r\n\t\t/count(case when v_ibutsu_judge != 1 OR v_ibutsu_judge = 1 then 'NG' else null end),3) AS \"%NG\"\r\nFROM \"real\"\r\nWHERE\r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '3'\r\nORDER BY 1 ",
+          "refId": "B",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "${DS_SDM_4}"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "hide": false,
+          "rawQuery": true,
+          "rawSql": "SELECT\r\n  TO_CHAR(ibutsu_timestamp,'YYYY-MM-DD HH:mm:ss') AS \"ibutsu_timestamp\",\r\n\tv_ibutsu_leak,\r\n\tpn AS pn,\r\n\tseat_leak AS seat_leak,\r\n\tair_leak AS air_leak,\r\n\top_max AS op_max,\r\n\top_min AS op_min\r\n\tFROM \"real\"\r\nLEFT JOIN  master\r\nON \"real\".assy_digit_no=master.id\r\n\tWHERE \r\n   $__timeFilter(ibutsu_timestamp) AND d_ibutsu_line = '3'\r\nORDER BY 1",
+          "refId": "C",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Air leak mc. Line 3",
+      "transformations": [],
+      "type": "nline-plotlyjs-panel"
+    }
+  ],
+  "refresh": "",
+  "revision": 1,
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now/y",
+    "to": "now/y"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "All graph real test",
+  "uid": "ScwTB1PVk",
+  "version": 12,
+  "weekStart": ""
+}
