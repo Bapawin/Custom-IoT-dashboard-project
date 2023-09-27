@@ -1,0 +1,162 @@
+let High = data.series[0].fields[6].values.buffer;
+let Highlast = High[High.length - 1];
+let Low = data.series[0].fields[7].values.buffer;
+let Lowlast = Low[Low.length - 1];
+let Average = data.series[0].fields[5].values.buffer;
+let Averagelast = Average[Average.length - 1];
+
+function addRedRectangle() {
+    var parent = document.getElementById("parent");
+    
+    // Check if the 'parent' element exists
+    if (parent !== null) {
+        var rectangle = document.createElement("div");
+
+        rectangle.style.width = "200px";
+        rectangle.style.height = "100px";
+        rectangle.style.border = "1px solid red";
+
+        parent.appendChild(rectangle);
+    } else {
+        console.error("Element with id 'parent' not found.");
+    }
+}
+
+var stdhigh = {
+  x: data.series[0].fields[10].values.buffer,
+  y: data.series[0].fields[6].values.buffer,
+  mode: 'lines',
+  name: 'Red',
+  line: {
+    color: 'rgb(219, 64, 82)',
+    width: 3
+  },
+  xaxis: 'x1',
+  yaxis: 'y1',
+  domain: { row: 0, column: 0 }
+};
+
+var stdlow = {
+  x: data.series[0].fields[10].values.buffer,
+  y: data.series[0].fields[7].values.buffer,
+  mode: 'lines',
+  name: 'Red',
+  line: {
+    color: 'rgb(219, 64, 82)',
+    width: 3
+  },
+  xaxis: 'x1',
+  yaxis: 'y1',
+  domain: { row: 0, column: 0 }
+};
+
+var scatter = {
+  x: data.series[0].fields[10].values.buffer,
+  y: data.series[0].fields[9].values.buffer,
+  marker: {
+    color: '#055C9D',
+  },
+  type: 'scatter',
+  mode: 'lines+markers', // Using both lines and markers
+  line: {
+    color: 'white', // Set the line color to white
+  },
+  xaxis: 'x1',
+  yaxis: 'y1',
+  domain: { row: 0, column: 0 }
+};
+
+var trace1 = {
+    type: "indicator",
+    mode: "number",
+    value: String(Averagelast),
+    number: { font: { size: 25, color: Averagelast > Highlast || Averagelast < Lowlast ? "red" : "yellow" }}, // Set text color conditionally
+    title: { 
+        text: Averagelast > Highlast || Averagelast < Lowlast ? "Abnormal" : "Normal", 
+        font: { size: 15, color: Averagelast > Highlast || Averagelast < Lowlast ? "red" : "yellow", bgcolor: Averagelast > Highlast || Averagelast < Lowlast ? "yellow" : "transparent" }, // Set background color conditionally
+        yanchor: 'bottom' 
+    },
+    domain: { row:0, column:4 }
+};
+
+var trace2 = {
+    type: "indicator",
+    mode: "number",
+    value: String(Highlast),
+    number: { font: { size: 20 }},
+    title: { text: "Hi", font: { size: 12 }, yanchor: 'bottom' },
+ 
+    domain: { row:5, column:4 }
+};
+
+var trace3 = {
+    type: "indicator",
+    mode: "number",
+    value: String(Lowlast),
+    number: { font: { size: 20 }},
+    title: { text: "Low", font: { size: 12 }, yanchor: 'bottom' },
+ 
+    domain: { row:10, column:4 }
+};
+
+// Assuming your x-axis data is stored in data.series[0].fields[3].values.buffer
+var xDataPoints = data.series[0].fields[10].values.buffer;
+// Assuming your y-axis data is stored in data.series[0].fields[0].values.buffer
+var yDataPoints = data.series[0].fields[9].values.buffer;
+
+// An array to store the red rectangles
+var redRectangles = [];
+
+// Define the xOffset and yOffset as needed
+var xOffset = 1;
+var yOffset = 10;
+
+// Loop through the data points and create a red rectangle for each
+for (var i = 0; i < xDataPoints.length; i++) {
+    var xPoint = xDataPoints[i];
+    var yPoint = yDataPoints[i];
+    
+    // Assuming High and Low are arrays with corresponding values for each data point
+    var currentHigh = High[i];
+    var currentLow = Low[i];
+    
+    var redRectangle = {
+        type: 'rect',
+        x0: xPoint - xOffset, // Adjust x-coordinate as needed
+        x1: xPoint + xOffset, // Adjust x-coordinate as needed
+        y0: yPoint - yOffset, // Adjust y-coordinate as needed
+        y1: yPoint + yOffset, // Adjust y-coordinate as needed
+        fillcolor: 'red',
+        opacity: 0.3, // Adjust opacity as needed
+        line: {
+            width: 0  // Set the border width to 0 to remove the border
+        }
+    };
+    
+    // Check if the condition is met to add the red rectangle for this data point
+    if (yPoint > currentHigh || yPoint < currentLow) {
+        redRectangles.push(redRectangle);
+    }
+}
+
+var layout = {
+  showlegend: false,
+    font: {
+    color: '#FFFFFF'
+  },
+  grid: { rows: 12, columns: 5, pattern: "independent" },
+  margin: { t: 30, b: 5, l: 50, r: 10 },
+  xaxis: {domain: [0, 0.75],gridcolor: 'grey',
+          title: {
+          text: "Sec",
+          standoff: 10},},
+  yaxis: {domain: [0.2, 1],   gridcolor: 'grey',
+          title: {
+          text: "Value",
+          standoff: 10},},
+  xaxis2: {domain: [0.75, 1],gridcolor: 'grey'},
+    // Add the red rectangle shape to the layout
+    shapes: redRectangles
+};
+  
+return {data:[scatter,trace1,trace2,trace3,stdhigh,stdlow],layout:layout };
